@@ -1,0 +1,72 @@
+import sys
+import random
+
+def main(argv):
+	graph, vertices, edges = processInputMatrix(argv[0])
+
+	naiveOrder, naiveScore = naive2approx(graph, vertices, edges)
+
+	print(naiveOrder, naiveScore)
+
+	orders = []
+	orders.append(naiveOrder)
+
+	createOutput('output.out', orders)
+
+def naive2approx(graph, vertices, edges):
+	order = generateRandomOrder(0, vertices)
+	forward = countForward(graph, vertices, order)
+	order, forward = flip(order, forward, edges)
+	return order, forward
+
+def processInputMatrix(s):
+	fin = open(s, "r")
+	line = fin.readline().split()
+	N = int(line[0])
+	edges = 0
+
+	d = [[0 for j in range(N)] for i in range(N)]
+	for i in xrange(N):
+		line = fin.readline().split()
+		for j in xrange(N):
+			d[i][j] = int(line[j])
+			if d[i][j] != 0:
+				edges += 1
+	return d, N, edges
+
+def generateRandomOrder(start, end):
+	f = range(start, end	)
+	random.shuffle(f)
+	return f
+
+def countForward(graph, size, order):
+	counter = 0
+	for i in range(size):
+		node1 = order[i]
+		for j in range(i, size):
+			node2 = order[j]
+
+			if graph[node1][node2] != 0:
+				counter += 1
+
+	return counter
+
+def flip(order, forward, edges):
+	if forward <= edges / 2:
+		return order[::-1], (edges - forward)
+	return order, forward
+
+def createOutput(name, orders):
+	fout = open(name, 'w')
+
+	for order in orders:
+		for i in order:
+			if i == len(order) - 1:
+				fout.write(str(i))
+			else:
+				fout.write(str(i) + ' ')
+		fout.write('\n')
+	fout.close()
+
+if __name__ == '__main__':
+	main(sys.argv[1:])
