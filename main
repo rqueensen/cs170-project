@@ -4,15 +4,70 @@ import random
 def main(argv):
 	graph, vertices, edges = processInputMatrix(argv[0])
 
-	naiveOrder, naiveScore = naive2approx(graph, vertices, edges)
-
-	print(naiveOrder, naiveScore)
-
 	orders = []
+
+	naiveOrder, naiveScore = naive2approx(graph, vertices, edges)
+	print(naiveOrder, naiveScore)
 	orders.append(naiveOrder)
 
-	createOutput('output.out', orders)
+	greedyDiffOrder, greedyDiffScore = greedyDiff(graph, vertices, edges)
+	print(greedyDiffOrder, greedyDiffScore)
+	orders.append(greedyDiffOrder)
 
+	greedyRatioOrder, greedyRatioScore = greedyRatio(graph, vertices, edges)
+	print(greedyRatioOrder, greedyRatioScore)
+	orders.append(greedyRatioOrder)
+
+	createOutput('TEAMNAME.out', orders)
+
+#--------------------------------------------------------------------
+def greedyDiff(graph, vertices, edges):
+	order = findIncreasingRank(graph, 0, vertices)
+	score = countForward(graph, vertices, order)
+	return order, score
+
+def findIncreasingRank(graph, start, end):
+	inMinusOut = []
+
+	for i in range(start, end):
+		incoming = 0
+		outgoing = 0
+		for j in range(start, end):
+			if graph[i][j] != 0:
+				outgoing += 1
+			if graph[j][i] != 0:
+				incoming += 1
+		inMinusOut.append((i, incoming - outgoing))
+
+	inMinusOut.sort(key=lambda tup: tup[1])
+
+	return [i[0] for i in inMinusOut]
+
+#--------------------------------------------------------------------
+def greedyRatio(graph, vertices, edges):
+	order = findIncreasingRank(graph, 0, vertices)
+	score = countForward(graph, vertices, order)
+	return order, score
+
+def findIncreasingRank(graph, start, end):
+	inMinusOut = []
+
+	for i in range(start, end):
+		incoming = 0
+		outgoing = 0
+		for j in range(start, end):
+			if graph[i][j] != 0:
+				outgoing += 1
+			if graph[j][i] != 0:
+				incoming += 1
+		inMinusOut.append((i, incoming / outgoing))
+
+	inMinusOut.sort(key=lambda tup: tup[1])
+
+	return [i[0] for i in inMinusOut]
+
+
+#--------------------------------------------------------------------
 def naive2approx(graph, vertices, edges):
 	order = generateRandomOrder(0, vertices)
 	forward = countForward(graph, vertices, order)
@@ -35,15 +90,15 @@ def processInputMatrix(s):
 	return d, N, edges
 
 def generateRandomOrder(start, end):
-	f = range(start, end	)
+	f = range(start, end)
 	random.shuffle(f)
 	return f
 
-def countForward(graph, size, order):
+def countForward(graph, vertices, order):
 	counter = 0
-	for i in range(size):
+	for i in range(vertices):
 		node1 = order[i]
-		for j in range(i, size):
+		for j in range(i, vertices):
 			node2 = order[j]
 
 			if graph[node1][node2] != 0:
