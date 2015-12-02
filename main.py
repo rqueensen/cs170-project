@@ -13,7 +13,7 @@ import operator
 def main(argv):
 
 	if argv:
-		actualRun(argv[0])
+		actualRun(argv)
 	else:
 		randomRun()
 
@@ -26,12 +26,17 @@ def actualRun(s):
 	names.append('topological')
 	names.append('topo-greedy')
 
-	graph, vertices, edges = processInputMatrix(s)
+	for i in range(0, len(s)):
+		graph, vertices, edges = processInputMatrix(s[i])
 
-	scores, curOrders = runAllAlgorithms(graph, vertices, edges)
+		scores, curOrders = runAllAlgorithms(graph, vertices, edges)
 
-	best = names[max(scoresAndOrders, key=lambda x:x[1])[0]]
-	# print 'best is: ', best
+		best = max(scores, key=lambda x:x[1])[0]
+		bestName = names[best]
+		bestOrder = curOrders[best]
+		orders.append(bestOrder)
+		print 'best is: ', bestName
+
 	createOutput('TEAMNAME.out', orders)
 
 def randomRun():
@@ -44,8 +49,9 @@ def randomRun():
 	# edgeRatio = random.random()
 	vertices = 100
 	edgeRatio = 0.5
+	repeats = 20
 
-	for i in range(0,20):
+	for i in range(0,repeats):
 		graph, edges = randomizedInput(vertices, edgeRatio)
 
 		scores, curOrders = runAllAlgorithms(graph, vertices, edges)
@@ -55,12 +61,12 @@ def randomRun():
 		bestOrder = curOrders[best]
 		orders.append(bestOrder)
 
-	# print '# of naive best: ', numberOfBest[0]
-	# print '# of greedy diff best: ', numberOfBest[1]
-	# print '# of greedy ratio best: ', numberOfBest[2]
-	# print '# of topological sort best: ', numberOfBest[3]
-	# print '# of topo-greedy best: ', numberOfBest[4]
-	# print 'vertices: ', vertices, '\nedgeRatio: ', edgeRatio
+	print '# of naive best: ', numberOfBest[0]
+	print '# of greedy diff best: ', numberOfBest[1]
+	print '# of greedy ratio best: ', numberOfBest[2]
+	print '# of topological sort best: ', numberOfBest[3]
+	print '# of topo-greedy best: ', numberOfBest[4]
+	print 'vertices: ', vertices, '\nedgeRatio: ', edgeRatio
 	createOutput('TEAMNAME.out', orders)
 
 def runAllAlgorithms(graph, vertices, edges):
@@ -87,11 +93,11 @@ def runAllAlgorithms(graph, vertices, edges):
 	scores.append((4, topoGreedyScore))
 	orders.append((4, topoGreedyOrder))
 
-	# print 'naive', naiveScore
-	# print 'greedy diff', greedyDiffScore
-	# print 'greedy ratio', greedyRatioScore
-	# print 'topological sort', topologicalScore
-	# print 'topo-greedy sort', topoGreedyScore
+	print 'naive', naiveScore
+	print 'greedy diff', greedyDiffScore
+	print 'greedy ratio', greedyRatioScore
+	print 'topological sort', topologicalScore
+	print 'topo-greedy sort', topoGreedyScore
 
 	return scores, orders
 
