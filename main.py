@@ -13,20 +13,26 @@ import operator
 def main(argv):
 
 	if argv:
-		actualRun(argv)
+		actualRun(argv[0])
 	else:
 		randomRun()
 
 def actualRun(s):
 	orders = []
+	names = []
+	names.append('naive')
+	names.append('greedy diff')
+	names.append('greedy ratio')
+	names.append('topological')
+	names.append('topo-greedy')
 
 	graph, vertices, edges = processInputMatrix(s)
 
 	scores, curOrders = runAllAlgorithms(graph, vertices, edges)
 	orders.extend(curOrders)
 
-	best[max(scores, key=lambda x:x[1])[0]] += 1
-
+	best = names[max(scores, key=lambda x:x[1])[0]]
+	print 'best is: ', best
 	createOutput('TEAMNAME.out', orders)
 
 def randomRun():
