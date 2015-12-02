@@ -5,7 +5,6 @@ import operator
 #       TO DO:
 #               3 Input Files by Wednesday
 #               Implement Smart Algorithms
-#               Come up with team name
 #               Double check what we need to turn in (including student id # stuff)
 #--------------------------------------------------------------------
 #------------MAIN----------------------------------------------------
@@ -13,41 +12,39 @@ import operator
 
 def main(argv):
 
+	if argv:
+		actualRun(argv)
+	else:
+		randomRun()
+
+def actualRun(s):
+	orders = []
+
+	graph, vertices, edges = processInputMatrix(s)
+
+	scores, curOrders = runAllAlgorithms(graph, vertices, edges)
+	orders.extend(curOrders)
+
+	best[max(scores, key=lambda x:x[1])[0]] += 1
+
+	createOutput('TEAMNAME.out', orders)
+
+def randomRun():
 	orders = []
 	best = []
-	for i in range(0,4):
+	for i in range(0,5):
 		best.append(0)
 
 	# vertices = random.randint(1, 100)
 	# edgeRatio = random.random()
-
 	vertices = 100
 	edgeRatio = 0.5
 
-	for i in range(0,100):
-		scores = []
-
+	for i in range(0,20):
 		graph, edges = randomizedInput(vertices, edgeRatio)
 
-		naiveOrder, naiveScore = naive2approx(graph, vertices, edges)
-		scores.append((0, naiveScore))
-		print 'naive', naiveScore
-		orders.append(naiveOrder)
-
-		greedyDiffOrder, greedyDiffScore = greedyDiff(graph, vertices, edges)
-		scores.append((1, greedyDiffScore))
-		print 'greedy diff', greedyDiffScore
-		orders.append(greedyDiffOrder)
-
-		greedyRatioOrder, greedyRatioScore = greedyRatio(graph, vertices, edges)
-		scores.append((2, greedyRatioScore))
-		print 'greedy ratio', greedyRatioScore
-		orders.append(greedyRatioOrder)
-
-		topologicalOrder, topologicalScore = topologicalSort(graph, vertices, edges)
-		scores.append((3, topologicalScore))
-		print 'topological sort', topologicalScore
-		orders.append(topologicalOrder)
+		scores, curOrders = runAllAlgorithms(graph, vertices, edges)
+		orders.extend(curOrders)
 
 		best[max(scores, key=lambda x:x[1])[0]] += 1
 
@@ -55,8 +52,40 @@ def main(argv):
 	print '# of greedy diff best: ', best[1]
 	print '# of greedy ratio best: ', best[2]
 	print '# of topological sort best: ', best[3]
+	print '# of topo-greedy best: ', best[4]
 	print 'vertices: ', vertices, '\nedgeRatio: ', edgeRatio
 	createOutput('TEAMNAME.out', orders)
+
+def runAllAlgorithms(graph, vertices, edges):
+	scores = []
+	orders = []
+
+	naiveOrder, naiveScore = naive2approx(graph, vertices, edges)
+	scores.append((0, naiveScore))
+	print 'naive', naiveScore
+	orders.append(naiveOrder)
+
+	greedyDiffOrder, greedyDiffScore = greedyDiff(graph, vertices, edges)
+	scores.append((1, greedyDiffScore))
+	print 'greedy diff', greedyDiffScore
+	orders.append(greedyDiffOrder)
+
+	greedyRatioOrder, greedyRatioScore = greedyRatio(graph, vertices, edges)
+	scores.append((2, greedyRatioScore))
+	print 'greedy ratio', greedyRatioScore
+	orders.append(greedyRatioOrder)
+
+	topologicalOrder, topologicalScore = topologicalSort(graph, vertices, edges)
+	scores.append((3, topologicalScore))
+	print 'topological sort', topologicalScore
+	orders.append(topologicalOrder)
+
+	topoGreedyOrder, topoGreedyScore = topologicalRankedSort(graph, vertices, edges)
+	scores.append((4, topoGreedyScore))
+	print 'topo-greedy sort', topoGreedyScore
+	orders.append(topoGreedyOrder)
+
+	return scores, orders
 
 #--------------------------------------------------------------------
 #------------TOPOLOGICAL SORT----------------------------------------
@@ -69,15 +98,41 @@ def topologicalSort(graph, vertices, edges):
 def findSourceLike(graph, start, end):
 	deleted = []
 	for x in range(start, end):
-		incoming = []
+		incomingAll = []
 		for i in range(start, end):
 			if i not in deleted:
-				curIncoming = 0
+				incoming = 0
 				for j in range(start, end):
 					if graph[j][i] != 0 and j not in deleted:
-						curIncoming += 1
-				incoming.append((i, curIncoming))
-		delete = min(incoming, key=lambda tup: tup[1])[0]
+						incoming += 1
+				incomingAll.append((i, incoming))
+		delete = min(incomingAll, key=lambda tup: tup[1])[0]
+		deleted.append(delete)
+	return deleted
+
+#--------------------------------------------------------------------
+#------------TOPO-GREEDY----------------------------------------
+#--------------------------------------------------------------------
+def topologicalRankedSort(graph, vertices, edges):
+	order = findRankLike(graph, 0, vertices)
+	score = countForward(graph, vertices, order)
+	return order, score
+
+def findRankLike(graph, start, end):
+	deleted = []
+	for x in range(start, end):
+		inMinusOut = []
+		for i in range(start, end):
+			if i not in deleted:
+				incoming = 0
+				outgoing = 0
+				for j in range(start, end):
+					if graph[i][j] != 0 and j not in deleted:
+						outgoing += 1
+					if graph[j][i] != 0 and j not in deleted:
+						incoming += 1
+				inMinusOut.append((i, incoming - outgoing))
+		delete = min(inMinusOut, key=lambda tup: tup[1])[0]
 		deleted.append(delete)
 	return deleted
 
@@ -175,25 +230,25 @@ def createOutput(name, orders):
 	fout.close()
 
 def randomizedInput(size, trueRatio):
-	random_array = [[0 for x in xrange(size)] for y in xrange(size)]
+	randomArray = [[0 for x in xrange(size)] for y in xrange(size)]
 	edges = 0
 	for i in range(size):
 		for j in range(size):
 			if i != j and random.random() < trueRatio:
-				random_array[i][j] = 1
+				randomArray[i][j] = 1
 				edges += 1
 			else:
-				random_array[i][j] = 0
-	return random_array, edges
+				randomArray[i][j] = 0
+	return randomArray, edges
 
 def randomizedInputFile(name, size):
-	random_array, edges = randomizedInput(size)
+	randomArray, edges = randomizedInput(size)
 
 	fout = open(name, 'w')
 	fout.write(str(size)+"\n")
 	for i in range(size):
 		for j in range(size):
-			fout.write(str(random_array[i][j]) + " ")
+			fout.write(str(randomArray[i][j]) + " ")
 
 		fout.write("\n")
 	fout.close()
