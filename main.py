@@ -12,24 +12,44 @@ import operator
 #--------------------------------------------------------------------
 
 def main(argv):
-	graph, vertices, edges = processInputMatrix(argv[0])
 
 	orders = []
 
-	naiveOrder, naiveScore = naive2approx(graph, vertices, edges)
-	print(naiveOrder, naiveScore)
-	orders.append(naiveOrder)
+	bestNaive = 0
+	bestGreedyDiff = 0
+	bestGreedyRatio = 0
 
-	greedyDiffOrder, greedyDiffScore = greedyDiff(graph, vertices, edges)
-	print(greedyDiffOrder, greedyDiffScore)
-	orders.append(greedyDiffOrder)
+	for i in xrange(1,100):
 
-	greedyRatioOrder, greedyRatioScore = greedyRatio(graph, vertices, edges)
-	print(greedyRatioOrder, greedyRatioScore)
-	orders.append(greedyRatioOrder)
+		graph = randomizedInput(100)
+		vertices = 100
+		edges = countEdges(graph, vertices)
+
+		naiveOrder, naiveScore = naive2approx(graph, vertices, edges)
+		print 'naive', naiveScore
+		orders.append(naiveOrder)
+
+		greedyDiffOrder, greedyDiffScore = greedyDiff(graph, vertices, edges)
+		print 'greedy diff', greedyDiffScore
+		orders.append(greedyDiffOrder)
+
+		greedyRatioOrder, greedyRatioScore = greedyRatio(graph, vertices, edges)
+		print 'greedy ratio', greedyRatioScore
+		orders.append(greedyRatioOrder)
+
+		if naiveScore > greedyDiffScore and naiveScore > greedyRatioScore:
+			bestNaive += 1
+			print 'The best was		naive'
+		elif greedyDiffScore > naiveScore and greedyDiffScore > greedyRatioScore:
+			bestGreedyDiff += 1
+			print 'The best was		greedyDiff'
+		else:
+			bestGreedyRatio += 1
+			print 'The best was		greedyRatio'
+
+	print '# of naive best: ', bestNaive, '\n', '# of greedyDiff best: ', bestGreedyDiff, '\n', '# of greedyRatio best: ', bestGreedyRatio, '\n'
 
 	createOutput('TEAMNAME.out', orders)
-	randomizedInput("test", 100)
 
 #--------------------------------------------------------------------
 #------------GREEDY WIN-LOSS DIFFERENCE------------------------------
@@ -108,7 +128,7 @@ def createOutput(name, orders):
 		fout.write('\n')
 	fout.close()
 
-def randomizedInput(name, size):
+def randomizedInput(size):
 	random_array = [[0 for x in xrange(size)] for y in xrange(size)]
 	edge = [0, 1]
 	for i in range(size):
@@ -117,6 +137,10 @@ def randomizedInput(name, size):
 				random_array[i][j] = 0
 			else:
 				random_array[i][j] = random.choice(edge)
+	return random_array
+
+def randomizedInputFile(name, size):
+	random_array = randomizedInput(size)
 
 	fout = open(name, 'w')
 	fout.write(str(size)+"\n")
@@ -141,6 +165,14 @@ def processInputMatrix(s):
 			if d[i][j] != 0:
 				edges += 1
 	return d, N, edges
+
+def countEdges(graph, vertices):
+	edges = 0
+	for i in xrange(vertices):
+		for j in xrange(vertices):
+			if graph[i][j] != 0:
+				edges += 1
+	return edges
 
 if __name__ == '__main__':
 	main(sys.argv[1:])
