@@ -11,9 +11,9 @@ import operator
 #--------------------------------------------------------------------
 
 def main(argv):
-
 	if argv:
 		actualRun(argv)
+
 	else:
 		randomRun()
 
@@ -25,6 +25,7 @@ def actualRun(s):
 	names.append('greedy ratio')
 	names.append('topological')
 	names.append('topo-greedy')
+	names.append('scc')
 
 	for i in range(0, len(s)):
 		graph, vertices, edges = processInputMatrix(s[i])
@@ -66,6 +67,7 @@ def randomRun():
 	print '# of greedy ratio best: ', numberOfBest[2]
 	print '# of topological sort best: ', numberOfBest[3]
 	print '# of topo-greedy best: ', numberOfBest[4]
+	print '# of scc: ', numberOfBest[5]
 	print 'vertices: ', vertices, '\nedgeRatio: ', edgeRatio
 	createOutput('TEAMNAME.out', orders)
 
@@ -93,13 +95,61 @@ def runAllAlgorithms(graph, vertices, edges):
 	scores.append((4, topoGreedyScore))
 	orders.append((4, topoGreedyOrder))
 
+	sccOrder, sccScore = scc(graph, vertices, edges)
+	scores.append((5, sccScore))
+	orders.append((5, sccOrder))
+
 	print 'naive', naiveScore
 	print 'greedy diff', greedyDiffScore
 	print 'greedy ratio', greedyRatioScore
 	print 'topological sort', topologicalScore
 	print 'topo-greedy sort', topoGreedyScore
+	print 'scc', sccScore
 
 	return scores, orders
+
+#--------------------------------------------------------------------
+#------------SCC----------------------------------------
+#--------------------------------------------------------------------
+def scc(graph, vertices, edges):
+	order = findSCC(graph, 0, vertices)
+	score = countForward(graph, vertices, order)
+	return order, score
+
+def findSCC(graph, vertices, edges):
+
+	#find all the SCC's in the graph
+
+	return topoSortSCC(initialList)
+
+def topoSortSCC(sccList):
+
+	#topologically sort the list of SCC's
+
+	retval = []
+	while sccList:
+		indivSCC = sccList.pop(0)
+		retOrder = runAllSCC(indivSCC, verts, edgs)
+	retval.extend(retOrder)
+	return retval
+
+def runAllSCC(graph, vertices, edges):
+	naiveOr, naiveSc = naive2approx(graph, vertices, edges)
+	greedyDiffOr, greedyDiffSc = greedyDiff(graph, vertices, edges)
+	greedyRatioOr, greedyRatioSc = greedyRatio(graph, vertices, edges)
+	topoOr, topologicalSc = topologicalSort(graph, vertices, edges)
+	topoGreedyOr, topoGreedySc = topologicalRankedSort(graph, vertices, edges)
+	highest = max(naiveSc, greedyDiffSc, greedyRatioSc, topologicalSc, topoGreedySc)
+	if highest == naiveSc: 
+		return naiveOr
+	else if highest == greedyDiffSc:
+		return greedyDiffOr
+	else if highest == greedyRatioSc:
+		return greedyRatioOr
+	else if highest == topologicalSc:
+		return topoOr
+	else if highest == topoGreedySc:
+		return topoGreedyOr
 
 #--------------------------------------------------------------------
 #------------TOPOLOGICAL SORT----------------------------------------
