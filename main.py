@@ -37,7 +37,7 @@ def actualRun(s):
 	numberOfBest = []
 	for i in range(0,5):
 		numberOfBest.append(0)
-		
+
 	names = []
 	names.append('naive')
 	names.append('greedy diff')
@@ -63,7 +63,6 @@ def actualRun(s):
 	print '# of greedy ratio best: ', numberOfBest[2]
 	print '# of topological sort best: ', numberOfBest[3]
 	print '# of topo-greedy best: ', numberOfBest[4]
-	print 'vertices: ', vertices, '\nedgeRatio: ', edgeRatio
 
 	createOutput('ParanoidSheep.out', orders)
 
