@@ -10,15 +10,34 @@ import operator
 #------------MAIN----------------------------------------------------
 #--------------------------------------------------------------------
 
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
 def main(argv):
 
 	if argv:
-		actualRun(argv)
+		if len(argv) == 3 and is_int(argv[1]) and is_int(argv[2]):
+			
+			filenames = []
+			for x in range(int(argv[1]), int(argv[2]) + 1):
+				filenames.append(argv[0] + '/' + str(x) + '.in')
+
+			actualRun(filenames)
+		else:
+			actualRun(argv)
 	else:
 		randomRun()
 
 def actualRun(s):
 	orders = []
+	numberOfBest = []
+	for i in range(0,5):
+		numberOfBest.append(0)
+		
 	names = []
 	names.append('naive')
 	names.append('greedy diff')
@@ -32,12 +51,21 @@ def actualRun(s):
 		scores, curOrders = runAllAlgorithms(graph, vertices, edges)
 
 		best = max(scores, key=lambda x:x[1])[0]
-		bestName = names[best]
+		numberOfBest[best] += 1
 		bestOrder = curOrders[best]
 		orders.append(bestOrder)
+
+		bestName = names[best]
 		print 'best is: ', bestName
 
-	createOutput('TEAMNAME.out', orders)
+	print '# of naive best: ', numberOfBest[0]
+	print '# of greedy diff best: ', numberOfBest[1]
+	print '# of greedy ratio best: ', numberOfBest[2]
+	print '# of topological sort best: ', numberOfBest[3]
+	print '# of topo-greedy best: ', numberOfBest[4]
+	print 'vertices: ', vertices, '\nedgeRatio: ', edgeRatio
+
+	createOutput('ParanoidSheep.out', orders)
 
 def randomRun():
 	orders = []
@@ -61,13 +89,16 @@ def randomRun():
 		bestOrder = curOrders[best]
 		orders.append(bestOrder)
 
+		bestName = names[best]
+		print 'best is: ', bestName
+
 	print '# of naive best: ', numberOfBest[0]
 	print '# of greedy diff best: ', numberOfBest[1]
 	print '# of greedy ratio best: ', numberOfBest[2]
 	print '# of topological sort best: ', numberOfBest[3]
 	print '# of topo-greedy best: ', numberOfBest[4]
 	print 'vertices: ', vertices, '\nedgeRatio: ', edgeRatio
-	createOutput('TEAMNAME.out', orders)
+	createOutput('ParanoidSheep.out', orders)
 
 def runAllAlgorithms(graph, vertices, edges):
 	scores = []
