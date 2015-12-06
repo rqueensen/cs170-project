@@ -37,14 +37,8 @@ orders = []
 numberOfBest = [0 for x in xrange(len(names))]
 
 def printBest(numberOfBest):
-	print '# of naive best: ', numberOfBest[0]
-	print '# of greedy diff best: ', numberOfBest[1]
-	print '# of greedy ratio best: ', numberOfBest[2]
-	print '# of topological sort best: ', numberOfBest[3]
-	print '# of topo-greedy best: ', numberOfBest[4]
-	print '# of topo-greedy best: ', numberOfBest[5]
-	print '# of local-max best: ', numberOfBest[6]
-	print '# of cc/brute best: ', numberOfBest[7]
+	for x in range(len(numberOfBest)):
+		print '# of ' + str(names[x]) + ', ' + str(numberOfBest[x])
 
 def actualRun(s, naiveIterations):
 	for i in xrange(len(s)):
@@ -121,22 +115,27 @@ def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveItera
 	scores.append((6, localMaxScore))
 	orders.append((6, localMaxOrder))
 	
-	ccScore = None
 	if not in_cc:
 		forwardScores = {}
 
 		ccOrder, ccScore = cc_order(graph, num_vertices, num_edges, naiveIterations)
 		scores.append((7, ccScore))
-		scores.append((7, ccScore))
+		orders.append((7, ccOrder))
 
-		print 'naive', naiveScore
-		print 'greedy diff', greedyDiffScore
-		print 'greedy ratio', greedyRatioScore
-		print 'topological sort', topologicalScore
-		print 'topo-greedy sort', topoGreedyScore
-		print 'topo-greedy-ratio sort', topoGreedyRatioScore
-		print 'local-max', localMaxScore
-		print 'cc/brute', ccScore
+		for x in xrange(len(scores)):
+			print '' + str(names[x]) + ': ' + str(scores[x][1])
+
+		# print 'naive', naiveScore
+		# print 'greedy diff', greedyDiffScore
+		# print 'greedy ratio', greedyRatioScore
+		# print 'topological sort', topologicalScore
+		# print 'topo-greedy sort', topoGreedyScore
+		# print 'topo-greedy-ratio sort', topoGreedyRatioScore
+		# print 'local-max', localMaxScore
+		# print 'cc/brute', ccScore
+	else:
+		scores.append((7, 0))
+		orders.append((7, None))
 
 	return scores, orders
 
