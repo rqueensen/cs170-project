@@ -46,7 +46,7 @@ def actualRun(s, naiveIterations):
 		graph, num_vertices, num_edges = processInputMatrix(s[i])
 
 		vertices = range(num_vertices)
-		scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, vertices, False, naiveIterations)
+		scores, curOrders = runAllAlgorithms(graph, num_edges, vertices, False, naiveIterations)
 
 		best = max(scores, key=lambda x:x[1])[0]
 		numberOfBest[best] += 1
@@ -71,7 +71,7 @@ def randomRun(naiveIterations):
 		graph, num_edges = randomizedInput(num_vertices, edgeRatio)
 
 		vertices = range(num_vertices)
-		scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, vertices, False, naiveIterations)
+		scores, curOrders = runAllAlgorithms(graph, num_edges, vertices, False, naiveIterations)
 
 		best = max(scores, key=lambda x:x[1])[0]
 		numberOfBest[best] += 1
@@ -84,36 +84,36 @@ def randomRun(naiveIterations):
 	print 'num_vertices: ', num_vertices, '\nedgeRatio: ', edgeRatio
 	createOutput('ParanoidSheep.out', orders)
 
-def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveIterations):
+def runAllAlgorithms(graph, num_edges, vertices, in_cc, naiveIterations):
 	scores = []
 	orders = []
 
-	naiveOrder, naiveScore = naive2approx(graph, num_vertices, num_edges, vertices, naiveIterations)
+	naiveOrder, naiveScore = naive2approx(graph, num_edges, vertices, naiveIterations)
 	scores.append((0, naiveScore))
 	orders.append((0, naiveOrder))
 
-	greedyDiffOrder, greedyDiffScore = greedyDiff(graph, num_vertices, num_edges, vertices)
+	greedyDiffOrder, greedyDiffScore = greedyDiff(graph, vertices)
 	scores.append((1, greedyDiffScore))
 	orders.append((1, greedyDiffOrder))
 
-	greedyRatioOrder, greedyRatioScore = greedyRatio(graph, num_vertices, num_edges, vertices)
+	greedyRatioOrder, greedyRatioScore = greedyRatio(graph, vertices)
 	scores.append((2, greedyRatioScore))
 	orders.append((2, greedyRatioOrder))
 
-	topologicalOrder, topologicalScore = topologicalSort(graph, num_vertices, num_edges, vertices)
+	topologicalOrder, topologicalScore = topologicalSort(graph, vertices)
 	scores.append((3, topologicalScore))
 	orders.append((3, topologicalOrder))
 
-	topoGreedyOrder, topoGreedyScore = topologicalRankedSort(graph, num_vertices, num_edges, vertices)
+	topoGreedyOrder, topoGreedyScore = topologicalRankedSort(graph, vertices)
 	scores.append((4, topoGreedyScore))
 	orders.append((4, topoGreedyOrder))
 
-	topoGreedyRatioOrder, topoGreedyRatioScore = topologicalRankedRatioSort(graph, num_vertices, num_edges, vertices)
+	topoGreedyRatioOrder, topoGreedyRatioScore = topologicalRankedRatioSort(graph, vertices)
 	scores.append((5, topoGreedyRatioScore))
 	orders.append((5, topoGreedyRatioOrder))
 
 	if not in_cc or not faster:
-		localMaxOrder, localMaxScore = permLocalMax(graph, num_vertices, num_edges, vertices, naiveOrder, naiveScore)
+		localMaxOrder, localMaxScore = permLocalMax(graph, vertices, naiveOrder, naiveScore)
 		scores.append((6, localMaxScore))
 		orders.append((6, localMaxOrder))
 	else:
@@ -123,7 +123,7 @@ def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveItera
 	if not in_cc:
 		forwardScores = {}
 
-		ccOrder, ccScore = cc_order(graph, num_vertices, num_edges, naiveIterations)
+		ccOrder, ccScore = cc_order(graph, naiveIterations)
 		scores.append((7, ccScore))
 		orders.append((7, ccOrder))
 
@@ -147,13 +147,13 @@ def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveItera
 #--------------------------------------------------------------------
 #------------PERMUTATIONS-LOCAL-MAX----------------------------------
 #--------------------------------------------------------------------
-def permLocalMax(graph, num_vertices, num_edges, vertices, startingOrder, startingForward):
-	localMaxOrder = findLocalMax(graph, num_vertices, vertices, startingOrder, startingForward)
+def permLocalMax(graph, vertices, startingOrder, startingForward):
+	localMaxOrder = findLocalMax(graph, vertices, startingOrder, startingForward)
 	localMaxForward = countForward(graph, localMaxOrder)
 
 	return localMaxOrder, localMaxForward
 
-def findLocalMax(graph, num_vertices, vertices, order, forward):
+def findLocalMax(graph, vertices, order, forward):
 	maxForward = forward
 	maxOrder = copy.copy(order)
 
@@ -170,12 +170,12 @@ def findLocalMax(graph, num_vertices, vertices, order, forward):
 	if maxForward == forward:
 		return maxOrder
 	else:
-		return findLocalMax(graph, num_vertices, vertices, maxOrder, maxForward)
+		return findLocalMax(graph, vertices, maxOrder, maxForward)
 
 #--------------------------------------------------------------------
 #------------TOPO-GREEDY-RATIO---------------------------------------
 #--------------------------------------------------------------------
-def topologicalRankedRatioSort(graph, num_vertices, num_edges, vertices):
+def topologicalRankedRatioSort(graph, vertices):
 	order = findRankRatioLike(graph, vertices)
 	score = countForward(graph, order)
 	return order, score
@@ -203,7 +203,7 @@ def findRankRatioLike(graph, vertices):
 #--------------------------------------------------------------------
 #------------TOPO-GREEDY---------------------------------------------
 #--------------------------------------------------------------------
-def topologicalRankedSort(graph, num_vertices, num_edges, vertices):
+def topologicalRankedSort(graph, vertices):
 	order = findRankLike(graph, vertices)
 	score = countForward(graph, order)
 	return order, score
@@ -229,7 +229,7 @@ def findRankLike(graph, vertices):
 #--------------------------------------------------------------------
 #------------TOPOLOGICAL SORT----------------------------------------
 #--------------------------------------------------------------------
-def topologicalSort(graph, num_vertices, num_edges, vertices):
+def topologicalSort(graph, vertices):
 	order = findSourceLike(graph, vertices)
 	score = countForward(graph, order)
 	return order, score
@@ -253,7 +253,7 @@ def findSourceLike(graph, vertices):
 #--------------------------------------------------------------------
 #------------GREEDY WIN-LOSS RATIO-----------------------------------
 #--------------------------------------------------------------------
-def greedyRatio(graph, num_vertices, num_edges, vertices):
+def greedyRatio(graph, vertices):
 	order = findIncreasingRankRatio(graph, vertices)
 	score = countForward(graph, order)
 	return order, score
@@ -277,7 +277,7 @@ def findIncreasingRankRatio(graph, vertices):
 #--------------------------------------------------------------------
 #------------GREEDY WIN-LOSS DIFFERENCE------------------------------
 #--------------------------------------------------------------------
-def greedyDiff(graph, num_vertices, num_edges, vertices):
+def greedyDiff(graph, vertices):
 	order = findIncreasingRankDiff(graph, vertices)
 	score = countForward(graph, order)
 	return order, score
@@ -299,7 +299,7 @@ def findIncreasingRankDiff(graph, vertices):
 #--------------------------------------------------------------------
 #------------NAIVE 2-APPROXIMATION-----------------------------------
 #--------------------------------------------------------------------
-def naive2approx(graph, num_vertices, num_edges, vertices, numIterations):
+def naive2approx(graph, num_edges, vertices, numIterations):
 	maxOrder = None
 	maxForward = 0
 	for i in xrange(numIterations):
@@ -352,14 +352,14 @@ def hasScore(order):
 #------------CONNECTED COMPONENTS -----------------------------------
 #--------------------------------------------------------------------
 
-def cc_order(graph, num_vertices, num_edges, naiveIterations):
-	clumps = cc_finder(graph)
+def cc_order(graph, naiveIterations):
+	clumps, num_edges = cc_finder(graph)
 	final = []
 	for clump in clumps:
 		if len(clump) < 9:
 			final += bruteForce(graph, len(clump), clump)[1]
 		else:
-			scores, curOrders = runAllAlgorithms(graph, len(clump), num_edges, clump, True, naiveIterations)
+			scores, curOrders = runAllAlgorithms(graph, num_edges, clump, True, naiveIterations)
 			best = max(scores, key=lambda x:x[1])[0]
 			bestOrder = curOrders[best][1]
 			final += bestOrder
@@ -370,14 +370,18 @@ def cc_finder(graph):
 	#Returns a list of lists of nodes which are connected
 	visited = set()
 	cc_clumps = []
+	num_edges = 0
 	
 	for node in xrange(len(graph)):
 		if not node in visited:
 			clump = explore(graph, node)
 			visited = visited.union(clump)
 			cc_clumps.append(list(clump))
+			for x in xrange(len(graph)):
+				if graph[node][x] != 0:
+					num_edges += 1
 			
-	return cc_clumps
+	return cc_clumps, num_edges
 	
 	
 def explore(graph, start):
@@ -398,7 +402,7 @@ def explore(graph, start):
 #--------------------------------------------------------------------
 #------------Brute Force --------------------------------------------
 #--------------------------------------------------------------------
-def bruteForce(graph, num_vertices, vertices):
+def bruteForce(graph, vertices):
 	permutations = []
 	for i in itertools.permutations(vertices):
 		permutations.append(list(i))
