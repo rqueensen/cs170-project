@@ -101,6 +101,7 @@ def printBest(numberOfBest):
 	print '# of topo-greedy best: ', numberOfBest[4]
 	print '# of local-max best: ', numberOfBest[5]
 
+
 def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveIterations):
 	scores = []
 	orders = []
@@ -135,6 +136,11 @@ def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveItera
 	localMaxOrder, localMaxScore = permLocalMax(graph, num_vertices, num_edges, vertices, naiveOrder, naiveScore)
 	scores.append((5, localMaxScore))
 	orders.append((5, localMaxOrder))
+	
+	if not in_cc:
+		ccOrder, ccScore = cc_finder(graph, num_vertices, num_edges)
+		scores.append((6, ccScore))
+		scores.append((6, ccScore))
 
 	print 'naive', naiveScore
 	print 'greedy diff', greedyDiffScore
@@ -327,18 +333,19 @@ def hasScore(order):
 #--------------------------------------------------------------------
 
 def cc_order(graph, num_vertices, num_edges):
-    clumps = cc_finder(graph)
-    final = []
-    for clump in clumps:
-        if len(clump) < 9:
-            final += bruteForce(graph, num_vertices, clump)[1]
-        else:
-            scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, clump, True, 1)
-            best = max(scores, key=lambda x:x[1])[0]
-            bestOrder = curOrders[best][1]
-            final += bestOrder
-    return final
-    
+	clumps = cc_finder(graph)
+	final = []
+	for clump in clumps:
+		if len(clump) < 9:
+			final += bruteForce(graph, num_vertices, clump)[1]
+		else:
+			scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, clump, True, 1)
+			best = max(scores, key=lambda x:x[1])[0]
+			bestOrder = curOrders[best][1]
+			final += bestOrder
+			
+	return final, countForward(graph, num_vertices, final)
+	
 def cc_finder(graph):
 	#Returns a list of lists of nodes which are connected
 	visited = set()
@@ -372,20 +379,20 @@ def explore(graph, start):
 #------------Brute Force --------------------------------------------
 #--------------------------------------------------------------------
 def bruteForce(graph, num_vertices, vertices):
-    permutations = []
-    for i in itertools.permutations(vertices):
-        permutations.append(list(i))
-        
-    best_score = 0
-    best_order = []
-    for perm in permutations:
-        rand_score = countForward(graph, num_vertices, perm)
-        if rand_score > best_score:
-            best_score = rand_score
-            best_order = perm
-            
-    return best_score, best_order
-    
+	permutations = []
+	for i in itertools.permutations(vertices):
+		permutations.append(list(i))
+		
+	best_score = 0
+	best_order = []
+	for perm in permutations:
+		rand_score = countForward(graph, num_vertices, perm)
+		if rand_score > best_score:
+			best_score = rand_score
+			best_order = perm
+			
+	return best_score, best_order
+	
 #--------------------------------------------------------------------
 #------------FILE MANIPULATION---------------------------------------
 #--------------------------------------------------------------------
