@@ -1,6 +1,8 @@
 import sys
 import random
 import operator
+import copy
+
 #--------------------------------------------------------------------
 #------------MAIN----------------------------------------------------
 #--------------------------------------------------------------------
@@ -154,21 +156,20 @@ def permLocalMax(graph, num_vertices, num_edges, vertices, startingOrder, starti
 
 def findLocalMax(graph, num_vertices, order, forward):
 	maxForward = forward
-	maxOrder = order
+	maxOrder = copy.copy(order)
 
-	for i in range(num_vertices - 1):
-		j = i + 1
-		order[i], order[j] = order[j], order[i]
-		curForward = countForward(graph, num_vertices, order)
+	for i in range(num_vertices):
+		j = random.randint(0, num_vertices - 1)
+		curOrder = copy.copy(order)
+		curOrder[i], curOrder[j] = curOrder[j], curOrder[i]
+		curForward = countForward(graph, num_vertices, curOrder)
 
 		if curForward > maxForward:
 			maxForward = curForward
-			maxOrder = list(order)
-
-		order[i], order[j] = order[j], order[i]
+			maxOrder = curOrder
 
 	if maxForward == forward:
-		return order
+		return maxOrder
 	else:
 		return findLocalMax(graph, num_vertices, maxOrder, maxForward)
 
@@ -280,7 +281,7 @@ def naive2approx(graph, num_vertices, num_edges, vertices, numIterations):
 		order, forward = flip(order, forward, num_edges)
 		if forward > maxForward:
 			maxForward = forward
-			maxOrder = order
+			maxOrder = copy.copy(order)
 
 	return maxOrder, maxForward
 
