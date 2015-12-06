@@ -276,7 +276,8 @@ def cc_finder(graph):
 	
 def explore(graph, start):
 	#Finds the set of nodes reachable from start by going any direction
-	q = set(start)
+	q = set()
+	q.add(start)
 	visited = set()
 	while len(q) != 0:
 		n = q.pop()
