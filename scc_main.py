@@ -169,9 +169,10 @@ def adjmat(graph):
     width = len(graph)
     dictionary = {}
     for x in range(width):
+        dictionary[x] = []
         for y in range(width):
             if graph[x][y] == 1:
-                dictionary.setdefault(x, []).append(y)
+                dictionary[x].append(y)
 
 def topoSortSCC(sccList, vertices, edges):
     #runs algorithms on topologically sorted list of SCC's
