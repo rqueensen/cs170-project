@@ -2,6 +2,7 @@ import sys
 import random
 import operator
 import copy
+import itertools
 
 #--------------------------------------------------------------------
 #------------MAIN----------------------------------------------------
@@ -22,7 +23,7 @@ def main(argv):
 		if len(argv) == 3 and is_int(argv[1]) and is_int(argv[2]):
 			
 			filenames = []
-			for x in range(int(argv[1]), int(argv[2]) + 1):
+			for x in xrange(int(argv[1]), int(argv[2]) + 1):
 				filenames.append(argv[0] + '/' + str(x) + '.in')
 
 			actualRun(filenames, naiveIterations)
@@ -31,25 +32,22 @@ def main(argv):
 	else:
 		randomRun(naiveIterations)
 
-names = []
-names.append('naive')
-names.append('greedy diff')
-names.append('greedy ratio')
-names.append('topological')
-names.append('topo-greedy')
-names.append('local-max')
-
+names = ['naive', 'greedy diff', 'greedy ratio', 'topological', 'topo-greedy', 'topo-greedy-ratio', 'local-max', 'cc/brute']
 orders = []
-numberOfBest = [0, 0, 0, 0, 0, 0]
+numberOfBest = [0 for x in xrange(len(names))]
 
-def setup():
-	orders = []
-	numberOfBest = [0, 0, 0, 0, 0, 0]
+def printBest(numberOfBest):
+	print '# of naive best: ', numberOfBest[0]
+	print '# of greedy diff best: ', numberOfBest[1]
+	print '# of greedy ratio best: ', numberOfBest[2]
+	print '# of topological sort best: ', numberOfBest[3]
+	print '# of topo-greedy best: ', numberOfBest[4]
+	print '# of topo-greedy best: ', numberOfBest[5]
+	print '# of local-max best: ', numberOfBest[6]
+	print '# of cc/brute best: ', numberOfBest[7]
 
 def actualRun(s, naiveIterations):
-	setup()	
-
-	for i in range(0, len(s)):
+	for i in xrange(len(s)):
 		graph, num_vertices, num_edges = processInputMatrix(s[i])
 
 		vertices = range(num_vertices)
@@ -60,23 +58,21 @@ def actualRun(s, naiveIterations):
 		bestOrder = curOrders[best][1]
 		orders.append(bestOrder)
 		bestName = names[best]
-		print 'best is: ', bestName
+		print 'best is: ', bestName, '\n'
 
 	printBest(numberOfBest)
 
 	createOutput('ParanoidSheep.out', orders)
 
 
-def randomRun(naiveIterations):
-	setup()
-	
+def randomRun(naiveIterations):	
 	# num_vertices = random.randint(1, 100)
 	# edgeRatio = random.random()
 	num_vertices = 100
 	edgeRatio = 0.5
-	repeats = 20
+	repeats = 10
 
-	for i in range(0,repeats):
+	for i in xrange(repeats):
 		graph, num_edges = randomizedInput(num_vertices, edgeRatio)
 
 		vertices = range(num_vertices)
@@ -87,27 +83,15 @@ def randomRun(naiveIterations):
 		bestOrder = curOrders[best][1]
 		orders.append(bestOrder)
 		bestName = names[best]
-		print 'best is: ', bestName
+		print 'best is: ', bestName, '\n'
 
 	printBest(numberOfBest)
 	print 'num_vertices: ', num_vertices, '\nedgeRatio: ', edgeRatio
 	createOutput('ParanoidSheep.out', orders)
 
-def printBest(numberOfBest):
-	print '# of naive best: ', numberOfBest[0]
-	print '# of greedy diff best: ', numberOfBest[1]
-	print '# of greedy ratio best: ', numberOfBest[2]
-	print '# of topological sort best: ', numberOfBest[3]
-	print '# of topo-greedy best: ', numberOfBest[4]
-	print '# of local-max best: ', numberOfBest[5]
-
-
 def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveIterations):
 	scores = []
 	orders = []
-
-	if not in_cc:
-		forwardScores = {}
 
 	naiveOrder, naiveScore = naive2approx(graph, num_vertices, num_edges, vertices, naiveIterations)
 	scores.append((0, naiveScore))
@@ -129,25 +113,30 @@ def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveItera
 	scores.append((4, topoGreedyScore))
 	orders.append((4, topoGreedyOrder))
 
-	topoGreedyOrder, topoGreedyScore = topologicalRankedSort(graph, num_vertices, num_edges, vertices)
-	scores.append((4, topoGreedyScore))
-	orders.append((4, topoGreedyOrder))
+	topoGreedyRatioOrder, topoGreedyRatioScore = topologicalRankedRatioSort(graph, num_vertices, num_edges, vertices)
+	scores.append((5, topoGreedyRatioScore))
+	orders.append((5, topoGreedyRatioOrder))
 
 	localMaxOrder, localMaxScore = permLocalMax(graph, num_vertices, num_edges, vertices, naiveOrder, naiveScore)
-	scores.append((5, localMaxScore))
-	orders.append((5, localMaxOrder))
+	scores.append((6, localMaxScore))
+	orders.append((6, localMaxOrder))
 	
+	ccScore = None
 	if not in_cc:
-		ccOrder, ccScore = cc_finder(graph, num_vertices, num_edges)
-		scores.append((6, ccScore))
-		scores.append((6, ccScore))
+		forwardScores = {}
 
-	print 'naive', naiveScore
-	print 'greedy diff', greedyDiffScore
-	print 'greedy ratio', greedyRatioScore
-	print 'topological sort', topologicalScore
-	print 'topo-greedy sort', topoGreedyScore
-	print 'local-max', localMaxScore	
+		ccOrder, ccScore = cc_order(graph, num_vertices, num_edges, naiveIterations)
+		scores.append((7, ccScore))
+		scores.append((7, ccScore))
+
+		print 'naive', naiveScore
+		print 'greedy diff', greedyDiffScore
+		print 'greedy ratio', greedyRatioScore
+		print 'topological sort', topologicalScore
+		print 'topo-greedy sort', topoGreedyScore
+		print 'topo-greedy-ratio sort', topoGreedyRatioScore
+		print 'local-max', localMaxScore
+		print 'cc/brute', ccScore
 
 	return scores, orders
 
@@ -164,7 +153,7 @@ def findLocalMax(graph, num_vertices, order, forward):
 	maxForward = forward
 	maxOrder = copy.copy(order)
 
-	for i in range(num_vertices):
+	for i in xrange(num_vertices):
 		j = random.randint(0, num_vertices - 1)
 		curOrder = copy.copy(order)
 		curOrder[i], curOrder[j] = curOrder[j], curOrder[i]
@@ -180,7 +169,35 @@ def findLocalMax(graph, num_vertices, order, forward):
 		return findLocalMax(graph, num_vertices, maxOrder, maxForward)
 
 #--------------------------------------------------------------------
-#------------TOPO-GREEDY--------------------------------------------
+#------------TOPO-GREEDY-RATIO---------------------------------------
+#--------------------------------------------------------------------
+def topologicalRankedRatioSort(graph, num_vertices, num_edges, vertices):
+	order = findRankLike(graph, vertices)
+	score = countForward(graph, num_vertices, order)
+	return order, score
+
+def findRankRatioLike(graph, vertices):
+	deleted = []
+	for x in vertices:
+		inOutRatio = []
+		for i in vertices:
+			if i not in deleted:
+				incoming = 0
+				outgoing = 0
+				for j in vertices:
+					if graph[i][j] != 0 and j not in deleted:
+						outgoing += 1
+					if graph[j][i] != 0 and j not in deleted:
+						incoming += 1
+				if outgoing == 0:
+					outgoing = 1
+				inOutRatio.append((i, incoming / outgoing))
+		delete = min(inOutRatio, key=lambda tup: tup[1])[0]
+		deleted.append(delete)
+	return deleted
+
+#--------------------------------------------------------------------
+#------------TOPO-GREEDY---------------------------------------------
 #--------------------------------------------------------------------
 def topologicalRankedSort(graph, num_vertices, num_edges, vertices):
 	order = findRankLike(graph, vertices)
@@ -238,7 +255,7 @@ def greedyRatio(graph, num_vertices, num_edges, vertices):
 	return order, score
 
 def findIncreasingRankRatio(graph, vertices):
-	inMinusOut = []
+	inOutRatio = []
 	for i in vertices:
 		incoming = 0
 		outgoing = 0
@@ -249,9 +266,9 @@ def findIncreasingRankRatio(graph, vertices):
 				incoming += 1
 		if outgoing == 0:
 			outgoing = 1
-		inMinusOut.append((i, incoming / outgoing))
-	inMinusOut.sort(key=lambda tup: tup[1])
-	return [i[0] for i in inMinusOut]
+		inOutRatio.append((i, incoming / outgoing))
+	inOutRatio.sort(key=lambda tup: tup[1])
+	return [i[0] for i in inOutRatio]
 
 #--------------------------------------------------------------------
 #------------GREEDY WIN-LOSS DIFFERENCE------------------------------
@@ -281,7 +298,7 @@ def findIncreasingRankDiff(graph, vertices):
 def naive2approx(graph, num_vertices, num_edges, vertices, numIterations):
 	maxOrder = None
 	maxForward = 0
-	for i in range(numIterations):
+	for i in xrange(numIterations):
 		order = generateRandomOrder(vertices)
 		forward = countForward(graph, num_vertices, order)
 		order, forward = flip(order, forward, num_edges)
@@ -308,9 +325,9 @@ def countForward(graph, num_vertices, order):
 		return score
 
 	counter = 0
-	for i in range(num_vertices):
+	for i in xrange(num_vertices):
 		node1 = order[i]
-		for j in range(i, num_vertices):
+		for j in xrange(i, num_vertices):
 			node2 = order[j]
 
 			if graph[node1][node2] != 0:
@@ -332,14 +349,14 @@ def hasScore(order):
 #------------CONNECTED COMPONENTS -----------------------------------
 #--------------------------------------------------------------------
 
-def cc_order(graph, num_vertices, num_edges):
+def cc_order(graph, num_vertices, num_edges, naiveIterations):
 	clumps = cc_finder(graph)
 	final = []
 	for clump in clumps:
 		if len(clump) < 9:
-			final += bruteForce(graph, num_vertices, clump)[1]
+			final += bruteForce(graph, len(clump), clump)[1]
 		else:
-			scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, clump, True, 1)
+			scores, curOrders = runAllAlgorithms(graph, len(clump), num_edges, clump, True, naiveIterations)
 			best = max(scores, key=lambda x:x[1])[0]
 			bestOrder = curOrders[best][1]
 			final += bestOrder
@@ -406,10 +423,10 @@ def createOutput(name, orders):
 	fout.close()
 
 def randomizedInput(size, trueRatio):
-	randomArray = [[0 for x in range(size)] for y in range(size)]
+	randomArray = [[0 for x in xrange(size)] for y in xrange(size)]
 	num_edges = 0
-	for i in range(size):
-		for j in range(size):
+	for i in xrange(size):
+		for j in xrange(size):
 			if i != j and random.random() < trueRatio:
 				randomArray[i][j] = 1
 				num_edges += 1
@@ -422,8 +439,8 @@ def randomizedInputFile(name, size):
 
 	fout = open(name, 'w')
 	fout.write(str(size)+"\n")
-	for i in range(size):
-		for j in range(size):
+	for i in xrange(size):
+		for j in xrange(size):
 			fout.write(str(randomArray[i][j]) + " ")
 
 		fout.write("\n")
@@ -435,10 +452,10 @@ def processInputMatrix(s):
 	N = int(line[0])
 	num_edges = 0
 
-	d = [[0 for j in range(N)] for i in range(N)]
-	for i in range(N):
+	d = [[0 for j in xrange(N)] for i in xrange(N)]
+	for i in xrange(N):
 		line = fin.readline().split()
-		for j in range(N):
+		for j in xrange(N):
 			d[i][j] = int(line[j])
 			if d[i][j] != 0:
 				num_edges += 1
