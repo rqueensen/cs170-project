@@ -16,7 +16,6 @@ def is_int(s):
 		return False
 
 def main(argv):
-
 	naiveIterations = 10
 
 	if argv:
@@ -37,7 +36,7 @@ orders = []
 numberOfBest = [0 for x in xrange(len(names))]
 
 def printBest(numberOfBest):
-	for x in range(len(numberOfBest)):
+	for x in xrange(len(numberOfBest)):
 		print '# of ' + str(names[x]) + ', ' + str(numberOfBest[x])
 
 def actualRun(s, naiveIterations):
@@ -143,20 +142,20 @@ def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveItera
 #------------PERMUTATIONS-LOCAL-MAX----------------------------------
 #--------------------------------------------------------------------
 def permLocalMax(graph, num_vertices, num_edges, vertices, startingOrder, startingForward):
-	localMaxOrder = findLocalMax(graph, num_vertices, startingOrder, startingForward)
-	localMaxForward = countForward(graph, num_vertices, localMaxOrder)
+	localMaxOrder = findLocalMax(graph, num_vertices, vertices, startingOrder, startingForward)
+	localMaxForward = countForward(graph, localMaxOrder)
 
 	return localMaxOrder, localMaxForward
 
-def findLocalMax(graph, num_vertices, order, forward):
+def findLocalMax(graph, num_vertices, vertices, order, forward):
 	maxForward = forward
 	maxOrder = copy.copy(order)
 
-	for i in xrange(num_vertices):
+	for i in vertices:
 		j = random.randint(0, num_vertices - 1)
 		curOrder = copy.copy(order)
 		curOrder[i], curOrder[j] = curOrder[j], curOrder[i]
-		curForward = countForward(graph, num_vertices, curOrder)
+		curForward = countForward(graph, curOrder)
 
 		if curForward > maxForward:
 			maxForward = curForward
@@ -165,14 +164,14 @@ def findLocalMax(graph, num_vertices, order, forward):
 	if maxForward == forward:
 		return maxOrder
 	else:
-		return findLocalMax(graph, num_vertices, maxOrder, maxForward)
+		return findLocalMax(graph, num_vertices, vertices, maxOrder, maxForward)
 
 #--------------------------------------------------------------------
 #------------TOPO-GREEDY-RATIO---------------------------------------
 #--------------------------------------------------------------------
 def topologicalRankedRatioSort(graph, num_vertices, num_edges, vertices):
 	order = findRankLike(graph, vertices)
-	score = countForward(graph, num_vertices, order)
+	score = countForward(graph, order)
 	return order, score
 
 def findRankRatioLike(graph, vertices):
@@ -200,7 +199,7 @@ def findRankRatioLike(graph, vertices):
 #--------------------------------------------------------------------
 def topologicalRankedSort(graph, num_vertices, num_edges, vertices):
 	order = findRankLike(graph, vertices)
-	score = countForward(graph, num_vertices, order)
+	score = countForward(graph, order)
 	return order, score
 
 def findRankLike(graph, vertices):
@@ -226,7 +225,7 @@ def findRankLike(graph, vertices):
 #--------------------------------------------------------------------
 def topologicalSort(graph, num_vertices, num_edges, vertices):
 	order = findSourceLike(graph, vertices)
-	score = countForward(graph, num_vertices, order)
+	score = countForward(graph, order)
 	return order, score
 
 def findSourceLike(graph, vertices):
@@ -250,7 +249,7 @@ def findSourceLike(graph, vertices):
 #--------------------------------------------------------------------
 def greedyRatio(graph, num_vertices, num_edges, vertices):
 	order = findIncreasingRankRatio(graph, vertices)
-	score = countForward(graph, num_vertices, order)
+	score = countForward(graph, order)
 	return order, score
 
 def findIncreasingRankRatio(graph, vertices):
@@ -274,7 +273,7 @@ def findIncreasingRankRatio(graph, vertices):
 #--------------------------------------------------------------------
 def greedyDiff(graph, num_vertices, num_edges, vertices):
 	order = findIncreasingRankDiff(graph, vertices)
-	score = countForward(graph, num_vertices, order)
+	score = countForward(graph, order)
 	return order, score
 
 def findIncreasingRankDiff(graph, vertices):
@@ -299,7 +298,7 @@ def naive2approx(graph, num_vertices, num_edges, vertices, numIterations):
 	maxForward = 0
 	for i in xrange(numIterations):
 		order = generateRandomOrder(vertices)
-		forward = countForward(graph, num_vertices, order)
+		forward = countForward(graph, order)
 		order, forward = flip(order, forward, num_edges)
 		if forward > maxForward:
 			maxForward = forward
@@ -318,17 +317,16 @@ def generateRandomOrder(vertices):
 
 forwardScores = {}
 
-def countForward(graph, num_vertices, order):
+def countForward(graph, order):
 	score = hasScore(order)
 	if score:
 		return score
 
 	counter = 0
-	for i in xrange(num_vertices):
+	for i in xrange(len(order)):
 		node1 = order[i]
-		for j in xrange(i, num_vertices):
+		for j in xrange(i, len(order)):
 			node2 = order[j]
-
 			if graph[node1][node2] != 0:
 				counter += 1
 
@@ -360,7 +358,7 @@ def cc_order(graph, num_vertices, num_edges, naiveIterations):
 			bestOrder = curOrders[best][1]
 			final += bestOrder
 			
-	return final, countForward(graph, num_vertices, final)
+	return final, countForward(graph, final)
 	
 def cc_finder(graph):
 	#Returns a list of lists of nodes which are connected
@@ -402,7 +400,7 @@ def bruteForce(graph, num_vertices, vertices):
 	best_score = 0
 	best_order = []
 	for perm in permutations:
-		rand_score = countForward(graph, num_vertices, perm)
+		rand_score = countForward(graph, perm)
 		if rand_score > best_score:
 			best_score = rand_score
 			best_order = perm
