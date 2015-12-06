@@ -57,7 +57,7 @@ def actualRun(s, naiveIterations):
 
 	printBest(numberOfBest)
 
-	createOutput('ParanoidSheep.out', orders)
+	createOutput('ParanoidSheep2.out', orders)
 
 
 def randomRun(naiveIterations):	
@@ -112,12 +112,12 @@ def runAllAlgorithms(graph, num_edges, vertices, in_cc, naiveIterations):
 	scores.append((5, topoGreedyRatioScore))
 	orders.append((5, topoGreedyRatioOrder))
 
-	if not in_cc or not faster:
+	if (not in_cc or not faster) and naiveOrder:
 		localMaxOrder, localMaxScore = permLocalMax(graph, vertices, naiveOrder, naiveScore)
 		scores.append((6, localMaxScore))
 		orders.append((6, localMaxOrder))
 	else:
-		scores.append((6, 0))
+		scores.append((6, -1000))
 		orders.append((6, None))
 	
 	if not in_cc:
@@ -130,16 +130,8 @@ def runAllAlgorithms(graph, num_edges, vertices, in_cc, naiveIterations):
 		for x in xrange(len(scores)):
 			print '' + str(names[x]) + ': ' + str(scores[x][1])
 
-		# print 'naive', naiveScore
-		# print 'greedy diff', greedyDiffScore
-		# print 'greedy ratio', greedyRatioScore
-		# print 'topological sort', topologicalScore
-		# print 'topo-greedy sort', topoGreedyScore
-		# print 'topo-greedy-ratio sort', topoGreedyRatioScore
-		# print 'local-max', localMaxScore
-		# print 'cc/brute', ccScore
 	else:
-		scores.append((7, 0))
+		scores.append((7, -1000))
 		orders.append((7, None))
 
 	return scores, orders
