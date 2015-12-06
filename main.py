@@ -330,7 +330,7 @@ def cc_order(graph, num_vertices, num_edges):
     final = []
     for clump in clumps:
         if len(clump) < 9:
-            final += bruteForce(graph, num_vertices, clump)
+            final += bruteForce(graph, num_vertices, clump)[1]
         else:
             scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, clump, True, 1)
             best = max(scores, key=lambda x:x[1])[0]
