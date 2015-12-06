@@ -18,19 +18,10 @@ def is_int(s):
         return False
 
 def main(argv):
-
-	if argv:
-		if len(argv) == 3 and is_int(argv[1]) and is_int(argv[2]):
-			
-			filenames = []
-			for x in range(int(argv[1]), int(argv[2]) + 1):
-				filenames.append(argv[0] + '/' + str(x) + '.in')
-
-			actualRun(filenames)
-		else:
-			actualRun(argv)
-	else:
-		randomRun()
+	graph, vertices, edges = processInputMatrix(argv[0])
+	
+	print cc_finder(graph)
+	
 
 def actualRun(s):
 	orders = []
@@ -263,6 +254,43 @@ def flip(order, forward, edges):
 	if forward <= edges / 2:
 		return order[::-1], (edges - forward)
 	return order, forward
+
+	
+#--------------------------------------------------------------------
+#------------CONNECTED COMPONENTS -----------------------------------
+#--------------------------------------------------------------------
+
+def cc_finder(graph):
+	#Returns a list of lists of nodes which are connected
+	visited = set()
+	cc_clumps = []
+	
+	for node in xrange(len(graph)):
+		if not node in visited:
+			clump = explore(graph, node)
+			visited = visited.union(clump)
+			cc_clumps.append(list(clump))
+			
+	return clump
+	
+	
+def explore(graph, start):
+	#Finds the set of nodes reachable from start by going any direction
+	q = set()
+	q.add(start)
+	visited = set()
+	while len(q) != 0:
+		n = q.pop()
+		if not n in visited:
+			visited.add(n)
+			for i in xrange(len(graph)):
+				if graph[n][i] == 1 or graph[i][n] == 1:
+					q.add(i)
+	
+	return visited
+	
+
+
 
 #--------------------------------------------------------------------
 #------------FILE MANIPULATION---------------------------------------
