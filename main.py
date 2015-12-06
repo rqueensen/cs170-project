@@ -52,8 +52,9 @@ def actualRun(s):
 
 		best = max(scores, key=lambda x:x[1])[0]
 		numberOfBest[best] += 1
-		bestOrder = curOrders[best]
+		bestOrder = curOrders[best][1]
 		orders.append(bestOrder)
+		print orders
 
 		bestName = names[best]
 		print 'best is: ', bestName
@@ -85,7 +86,7 @@ def randomRun():
 
 		best = max(scores, key=lambda x:x[1])[0]
 		numberOfBest[best] += 1
-		bestOrder = curOrders[best]
+		bestOrder = curOrders[best][1]
 		orders.append(bestOrder)
 
 		bestName = names[best]
@@ -266,10 +267,7 @@ def createOutput(name, orders):
 
 	for order in orders:
 		for i in order:
-			if i == len(order) - 1:
-				fout.write(str(i))
-			else:
-				fout.write(str(i) + ' ')
+			fout.write(str(i + 1) + ' ')
 		fout.write('\n')
 	fout.close()
 
