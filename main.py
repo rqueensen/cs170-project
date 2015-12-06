@@ -2,11 +2,6 @@ import sys
 import random
 import operator
 #--------------------------------------------------------------------
-#       TO DO:
-#               3 Input Files by Wednesday
-#               Implement Smart Algorithms
-#               Double check what we need to turn in (including student id # stuff)
-#--------------------------------------------------------------------
 #------------MAIN----------------------------------------------------
 #--------------------------------------------------------------------
 
@@ -19,6 +14,8 @@ def is_int(s):
 
 def main(argv):
 
+	naiveIterations = 10
+
 	if argv:
 		if len(argv) == 3 and is_int(argv[1]) and is_int(argv[2]):
 			
@@ -26,11 +23,11 @@ def main(argv):
 			for x in range(int(argv[1]), int(argv[2]) + 1):
 				filenames.append(argv[0] + '/' + str(x) + '.in')
 
-			actualRun(filenames)
+			actualRun(filenames, naiveIterations)
 		else:
-			actualRun(argv)
+			actualRun(argv, naiveIterations)
 	else:
-		randomRun()
+		randomRun(naiveIterations)
 
 names = []
 names.append('naive')
@@ -47,13 +44,14 @@ def setup():
 	orders = []
 	numberOfBest = [0, 0, 0, 0, 0, 0]
 
-def actualRun(s):
+def actualRun(s, naiveIterations):
 	setup()	
 
 	for i in range(0, len(s)):
 		graph, num_vertices, num_edges = processInputMatrix(s[i])
 
-		scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges)
+		vertices = range(num_vertices)
+		scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, vertices, False, naiveIterations)
 
 		best = max(scores, key=lambda x:x[1])[0]
 		numberOfBest[best] += 1
@@ -67,7 +65,7 @@ def actualRun(s):
 	createOutput('ParanoidSheep.out', orders)
 
 
-def randomRun():
+def randomRun(naiveIterations):
 	setup()
 	
 	# num_vertices = random.randint(1, 100)
@@ -80,7 +78,7 @@ def randomRun():
 		graph, num_edges = randomizedInput(num_vertices, edgeRatio)
 
 		vertices = range(num_vertices)
-		scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, vertices)
+		scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, vertices, False, naiveIterations)
 
 		best = max(scores, key=lambda x:x[1])[0]
 		numberOfBest[best] += 1
@@ -101,11 +99,14 @@ def printBest(numberOfBest):
 	print '# of topo-greedy best: ', numberOfBest[4]
 	print '# of local-max best: ', numberOfBest[5]
 
-def runAllAlgorithms(graph, num_vertices, num_edges, vertices):
+def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveIterations):
 	scores = []
 	orders = []
 
-	naiveOrder, naiveScore = naive2approx(graph, num_vertices, num_edges, vertices)
+	if not in_cc:
+		forwardScores = {}
+
+	naiveOrder, naiveScore = naive2approx(graph, num_vertices, num_edges, vertices, naiveIterations)
 	scores.append((0, naiveScore))
 	orders.append((0, naiveOrder))
 
@@ -129,29 +130,25 @@ def runAllAlgorithms(graph, num_vertices, num_edges, vertices):
 	scores.append((4, topoGreedyScore))
 	orders.append((4, topoGreedyOrder))
 
-	# localMaxOrder, localMaxScore = permLocalMax(graph, num_vertices, num_edges)
-	# scores.append((5, localMaxScore))
-	# orders.append((5, localMaxOrder))
+	localMaxOrder, localMaxScore = permLocalMax(graph, num_vertices, num_edges, vertices, naiveOrder, naiveScore)
+	scores.append((5, localMaxScore))
+	orders.append((5, localMaxOrder))
 
 	print 'naive', naiveScore
 	print 'greedy diff', greedyDiffScore
 	print 'greedy ratio', greedyRatioScore
 	print 'topological sort', topologicalScore
 	print 'topo-greedy sort', topoGreedyScore
-	# print 'local-max', localMaxScore	
-
-	forwardScores = {}
+	print 'local-max', localMaxScore	
 
 	return scores, orders
-
 
 #--------------------------------------------------------------------
 #------------PERMUTATIONS-LOCAL-MAX----------------------------------
 #--------------------------------------------------------------------
-def permLocalMax(graph, num_vertices, num_edges, vertices):
-	order, forward = naive2approx(graph, num_vertices, num_edges)
-	
-	localMaxOrder, localMaxForward = findLocalMax(graph, num_vertices, order, forward)
+def permLocalMax(graph, num_vertices, num_edges, vertices, startingOrder, startingForward):
+	localMaxOrder = findLocalMax(graph, num_vertices, startingOrder, startingForward)
+	localMaxForward = countForward(graph, num_vertices, localMaxOrder)
 
 	return localMaxOrder, localMaxForward
 
@@ -173,7 +170,6 @@ def findLocalMax(graph, num_vertices, order, forward):
 	if maxForward == forward:
 		return order
 	else:
-		print maxOrder
 		return findLocalMax(graph, num_vertices, maxOrder, maxForward)
 
 #--------------------------------------------------------------------
@@ -275,10 +271,22 @@ def findIncreasingRankDiff(graph, vertices):
 #--------------------------------------------------------------------
 #------------NAIVE 2-APPROXIMATION-----------------------------------
 #--------------------------------------------------------------------
-def naive2approx(graph, num_vertices, num_edges, vertices):
-	order = generateRandomOrder(vertices)
-	forward = countForward(graph, num_vertices, order)
-	order, forward = flip(order, forward, num_edges)
+def naive2approx(graph, num_vertices, num_edges, vertices, numIterations):
+	maxOrder = None
+	maxForward = 0
+	for i in range(numIterations):
+		order = generateRandomOrder(vertices)
+		forward = countForward(graph, num_vertices, order)
+		order, forward = flip(order, forward, num_edges)
+		if forward > maxForward:
+			maxForward = forward
+			maxOrder = order
+
+	return maxOrder, maxForward
+
+def flip(order, forward, num_edges):
+	if forward <= num_edges / 2:
+		return order[::-1], (num_edges - forward)
 	return order, forward
 
 def generateRandomOrder(vertices):
@@ -311,11 +319,6 @@ def hasScore(order):
         return x
     except KeyError:
         return None
-
-def flip(order, forward, num_edges):
-	if forward <= num_edges / 2:
-		return order[::-1], (num_edges - forward)
-	return order, forward
 
 #--------------------------------------------------------------------
 #------------FILE MANIPULATION---------------------------------------
