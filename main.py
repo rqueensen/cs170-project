@@ -346,7 +346,6 @@ def hasScore(order):
 		return x
 	except KeyError:
 		return None
-
 		
 #--------------------------------------------------------------------
 #------------CONNECTED COMPONENTS -----------------------------------
@@ -357,7 +356,7 @@ def cc_order(graph, naiveIterations):
 	final = []
 	for clump in clumps:
 		if len(clump) < 9:
-			final += bruteForce(graph, len(clump), clump)[1]
+			final += bruteForce(graph, clump)[1]
 		else:
 			scores, curOrders = runAllAlgorithms(graph, num_edges, clump, True, naiveIterations)
 			best = max(scores, key=lambda x:x[1])[0]
