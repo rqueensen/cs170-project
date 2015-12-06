@@ -6,11 +6,11 @@ import operator
 #--------------------------------------------------------------------
 
 def is_int(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
+	try:
+		int(s)
+		return True
+	except ValueError:
+		return False
 
 def main(argv):
 
@@ -314,12 +314,77 @@ def countForward(graph, num_vertices, order):
 	return counter
 
 def hasScore(order):
-    try:
-        x = forwardScores[str(order)]
-        return x
-    except KeyError:
-        return None
+	try:
+		x = forwardScores[str(order)]
+		return x
+	except KeyError:
+		return None
 
+		
+#--------------------------------------------------------------------
+#------------CONNECTED COMPONENTS -----------------------------------
+#--------------------------------------------------------------------
+
+def cc_order(graph, num_vertices, num_edges):
+    clumps = cc_finder(graph)
+    final = []
+    for clump in clumps:
+        if len(clump) < 9:
+            final += bruteForce(graph, num_vertices, clump)
+        else:
+            scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, clump, True, 1)
+            best = max(scores, key=lambda x:x[1])[0]
+            bestOrder = curOrders[best][1]
+            final += bestOrder
+    return final
+    
+def cc_finder(graph):
+	#Returns a list of lists of nodes which are connected
+	visited = set()
+	cc_clumps = []
+	
+	for node in xrange(len(graph)):
+		if not node in visited:
+			clump = explore(graph, node)
+			visited = visited.union(clump)
+			cc_clumps.append(list(clump))
+			
+	return cc_clumps
+	
+	
+def explore(graph, start):
+	#Finds the set of nodes reachable from start by going any direction
+	q = set()
+	q.add(start)
+	visited = set()
+	while len(q) != 0:
+		n = q.pop()
+		if not n in visited:
+			visited.add(n)
+			for i in xrange(len(graph)):
+				if graph[n][i] == 1 or graph[i][n] == 1:
+					q.add(i)
+	
+	return visited
+	
+#--------------------------------------------------------------------
+#------------Brute Force --------------------------------------------
+#--------------------------------------------------------------------
+def bruteForce(graph, num_vertices, vertices):
+    permutations = []
+    for i in itertools.permutations(vertices):
+        permutations.append(list(i))
+        
+    best_score = 0
+    best_order = []
+    for perm in permutations:
+        rand_score = countForward(graph, num_vertices, perm)
+        if rand_score > best_score:
+            best_score = rand_score
+            best_order = perm
+            
+    return best_score, best_order
+    
 #--------------------------------------------------------------------
 #------------FILE MANIPULATION---------------------------------------
 #--------------------------------------------------------------------
