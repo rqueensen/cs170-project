@@ -54,8 +54,6 @@ def actualRun(s):
 		numberOfBest[best] += 1
 		bestOrder = curOrders[best][1]
 		orders.append(bestOrder)
-		print orders
-
 		bestName = names[best]
 		print 'best is: ', bestName
 
@@ -73,6 +71,13 @@ def randomRun():
 	for i in range(0,5):
 		numberOfBest.append(0)
 
+	names = []
+	names.append('naive')
+	names.append('greedy diff')
+	names.append('greedy ratio')
+	names.append('topological')
+	names.append('topo-greedy')
+	
 	# vertices = random.randint(1, 100)
 	# edgeRatio = random.random()
 	vertices = 100
