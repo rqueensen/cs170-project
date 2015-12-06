@@ -15,6 +15,8 @@ def is_int(s):
 	except ValueError:
 		return False
 
+faster = False
+
 def main(argv):
 	naiveIterations = 10
 
@@ -110,9 +112,13 @@ def runAllAlgorithms(graph, num_vertices, num_edges, vertices, in_cc, naiveItera
 	scores.append((5, topoGreedyRatioScore))
 	orders.append((5, topoGreedyRatioOrder))
 
-	localMaxOrder, localMaxScore = permLocalMax(graph, num_vertices, num_edges, vertices, naiveOrder, naiveScore)
-	scores.append((6, localMaxScore))
-	orders.append((6, localMaxOrder))
+	if not in_cc or not faster:
+		localMaxOrder, localMaxScore = permLocalMax(graph, num_vertices, num_edges, vertices, naiveOrder, naiveScore)
+		scores.append((6, localMaxScore))
+		orders.append((6, localMaxOrder))
+	else:
+		scores.append((6, 0))
+		orders.append((6, None))
 	
 	if not in_cc:
 		forwardScores = {}
@@ -170,7 +176,7 @@ def findLocalMax(graph, num_vertices, vertices, order, forward):
 #------------TOPO-GREEDY-RATIO---------------------------------------
 #--------------------------------------------------------------------
 def topologicalRankedRatioSort(graph, num_vertices, num_edges, vertices):
-	order = findRankLike(graph, vertices)
+	order = findRankRatioLike(graph, vertices)
 	score = countForward(graph, order)
 	return order, score
 
