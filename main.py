@@ -32,23 +32,28 @@ def main(argv):
 	else:
 		randomRun()
 
-def actualRun(s):
-	orders = []
-	numberOfBest = []
-	for i in range(0,5):
-		numberOfBest.append(0)
+names = []
+names.append('naive')
+names.append('greedy diff')
+names.append('greedy ratio')
+names.append('topological')
+names.append('topo-greedy')
+names.append('local-max')
 
-	names = []
-	names.append('naive')
-	names.append('greedy diff')
-	names.append('greedy ratio')
-	names.append('topological')
-	names.append('topo-greedy')
+orders = []
+numberOfBest = [0, 0, 0, 0, 0, 0]
+
+def setup():
+	orders = []
+	numberOfBest = [0, 0, 0, 0, 0, 0]
+
+def actualRun(s):
+	setup()	
 
 	for i in range(0, len(s)):
-		graph, vertices, edges = processInputMatrix(s[i])
+		graph, num_vertices, num_edges = processInputMatrix(s[i])
 
-		scores, curOrders = runAllAlgorithms(graph, vertices, edges)
+		scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges)
 
 		best = max(scores, key=lambda x:x[1])[0]
 		numberOfBest[best] += 1
@@ -57,126 +62,137 @@ def actualRun(s):
 		bestName = names[best]
 		print 'best is: ', bestName
 
-	print '# of naive best: ', numberOfBest[0]
-	print '# of greedy diff best: ', numberOfBest[1]
-	print '# of greedy ratio best: ', numberOfBest[2]
-	print '# of topological sort best: ', numberOfBest[3]
-	print '# of topo-greedy best: ', numberOfBest[4]
+	printBest(numberOfBest)
 
 	createOutput('ParanoidSheep.out', orders)
 
-def randomRun():
-	orders = []
-	numberOfBest = []
-	for i in range(0,5):
-		numberOfBest.append(0)
 
-	names = []
-	names.append('naive')
-	names.append('greedy diff')
-	names.append('greedy ratio')
-	names.append('topological')
-	names.append('topo-greedy')
+def randomRun():
+	setup()
 	
-	# vertices = random.randint(1, 100)
+	# num_vertices = random.randint(1, 100)
 	# edgeRatio = random.random()
-	vertices = 100
+	num_vertices = 100
 	edgeRatio = 0.5
 	repeats = 20
 
 	for i in range(0,repeats):
-		graph, edges = randomizedInput(vertices, edgeRatio)
+		graph, num_edges = randomizedInput(num_vertices, edgeRatio)
 
-		scores, curOrders = runAllAlgorithms(graph, vertices, edges)
+		vertices = range(num_vertices)
+		scores, curOrders = runAllAlgorithms(graph, num_vertices, num_edges, vertices)
 
 		best = max(scores, key=lambda x:x[1])[0]
 		numberOfBest[best] += 1
 		bestOrder = curOrders[best][1]
 		orders.append(bestOrder)
-
 		bestName = names[best]
 		print 'best is: ', bestName
 
+	printBest(numberOfBest)
+	print 'num_vertices: ', num_vertices, '\nedgeRatio: ', edgeRatio
+	createOutput('ParanoidSheep.out', orders)
+
+def printBest(numberOfBest):
 	print '# of naive best: ', numberOfBest[0]
 	print '# of greedy diff best: ', numberOfBest[1]
 	print '# of greedy ratio best: ', numberOfBest[2]
 	print '# of topological sort best: ', numberOfBest[3]
 	print '# of topo-greedy best: ', numberOfBest[4]
-	print 'vertices: ', vertices, '\nedgeRatio: ', edgeRatio
-	createOutput('ParanoidSheep.out', orders)
+	print '# of local-max best: ', numberOfBest[5]
 
-def runAllAlgorithms(graph, vertices, edges):
+def runAllAlgorithms(graph, num_vertices, num_edges, vertices):
 	scores = []
 	orders = []
 
-	naiveOrder, naiveScore = naive2approx(graph, vertices, edges)
+	naiveOrder, naiveScore = naive2approx(graph, num_vertices, num_edges, vertices)
 	scores.append((0, naiveScore))
 	orders.append((0, naiveOrder))
 
-	greedyDiffOrder, greedyDiffScore = greedyDiff(graph, vertices, edges)
+	greedyDiffOrder, greedyDiffScore = greedyDiff(graph, num_vertices, num_edges, vertices)
 	scores.append((1, greedyDiffScore))
 	orders.append((1, greedyDiffOrder))
 
-	greedyRatioOrder, greedyRatioScore = greedyRatio(graph, vertices, edges)
+	greedyRatioOrder, greedyRatioScore = greedyRatio(graph, num_vertices, num_edges, vertices)
 	scores.append((2, greedyRatioScore))
 	orders.append((2, greedyRatioOrder))
 
-	topologicalOrder, topologicalScore = topologicalSort(graph, vertices, edges)
+	topologicalOrder, topologicalScore = topologicalSort(graph, num_vertices, num_edges, vertices)
 	scores.append((3, topologicalScore))
 	orders.append((3, topologicalOrder))
 
-	topoGreedyOrder, topoGreedyScore = topologicalRankedSort(graph, vertices, edges)
+	topoGreedyOrder, topoGreedyScore = topologicalRankedSort(graph, num_vertices, num_edges, vertices)
 	scores.append((4, topoGreedyScore))
 	orders.append((4, topoGreedyOrder))
+
+	topoGreedyOrder, topoGreedyScore = topologicalRankedSort(graph, num_vertices, num_edges, vertices)
+	scores.append((4, topoGreedyScore))
+	orders.append((4, topoGreedyOrder))
+
+	# localMaxOrder, localMaxScore = permLocalMax(graph, num_vertices, num_edges)
+	# scores.append((5, localMaxScore))
+	# orders.append((5, localMaxOrder))
 
 	print 'naive', naiveScore
 	print 'greedy diff', greedyDiffScore
 	print 'greedy ratio', greedyRatioScore
 	print 'topological sort', topologicalScore
 	print 'topo-greedy sort', topoGreedyScore
+	# print 'local-max', localMaxScore	
+
+	forwardScores = {}
 
 	return scores, orders
 
+
 #--------------------------------------------------------------------
-#------------TOPOLOGICAL SORT----------------------------------------
+#------------PERMUTATIONS-LOCAL-MAX----------------------------------
 #--------------------------------------------------------------------
-def topologicalSort(graph, vertices, edges):
-	order = findSourceLike(graph, 0, vertices)
-	score = countForward(graph, vertices, order)
+def permLocalMax(graph, num_vertices, num_edges, vertices):
+	order, forward = naive2approx(graph, num_vertices, num_edges)
+	
+	localMaxOrder, localMaxForward = findLocalMax(graph, num_vertices, order, forward)
+
+	return localMaxOrder, localMaxForward
+
+def findLocalMax(graph, num_vertices, order, forward):
+	maxForward = forward
+	maxOrder = order
+
+	for i in range(num_vertices - 1):
+		j = i + 1
+		order[i], order[j] = order[j], order[i]
+		curForward = countForward(graph, num_vertices, order)
+
+		if curForward > maxForward:
+			maxForward = curForward
+			maxOrder = list(order)
+
+		order[i], order[j] = order[j], order[i]
+
+	if maxForward == forward:
+		return order
+	else:
+		print maxOrder
+		return findLocalMax(graph, num_vertices, maxOrder, maxForward)
+
+#--------------------------------------------------------------------
+#------------TOPO-GREEDY--------------------------------------------
+#--------------------------------------------------------------------
+def topologicalRankedSort(graph, num_vertices, num_edges, vertices):
+	order = findRankLike(graph, vertices)
+	score = countForward(graph, num_vertices, order)
 	return order, score
 
-def findSourceLike(graph, start, end):
+def findRankLike(graph, vertices):
 	deleted = []
-	for x in range(start, end):
-		incomingAll = []
-		for i in range(start, end):
-			if i not in deleted:
-				incoming = 0
-				for j in range(start, end):
-					if graph[j][i] != 0 and j not in deleted:
-						incoming += 1
-				incomingAll.append((i, incoming))
-		delete = min(incomingAll, key=lambda tup: tup[1])[0]
-		deleted.append(delete)
-	return deleted
-
-#--------------------------------------------------------------------
-#------------TOPO-GREEDY----------------------------------------
-#--------------------------------------------------------------------
-def topologicalRankedSort(graph, vertices, edges):
-	order = findRankLike(graph, 0, vertices)
-	score = countForward(graph, vertices, order)
-	return order, score
-
-def findRankLike(graph, start, end):
-	deleted = []
-	for x in range(start, end):
+	for x in vertices:
 		inMinusOut = []
-		for i in range(start, end):
+		for i in vertices:
 			if i not in deleted:
 				incoming = 0
 				outgoing = 0
-				for j in range(start, end):
+				for j in vertices:
 					if graph[i][j] != 0 and j not in deleted:
 						outgoing += 1
 					if graph[j][i] != 0 and j not in deleted:
@@ -187,41 +203,43 @@ def findRankLike(graph, start, end):
 	return deleted
 
 #--------------------------------------------------------------------
-#------------GREEDY WIN-LOSS DIFFERENCE------------------------------
+#------------TOPOLOGICAL SORT----------------------------------------
 #--------------------------------------------------------------------
-def greedyDiff(graph, vertices, edges):
-	order = findIncreasingRankDiff(graph, 0, vertices)
-	score = countForward(graph, vertices, order)
+def topologicalSort(graph, num_vertices, num_edges, vertices):
+	order = findSourceLike(graph, vertices)
+	score = countForward(graph, num_vertices, order)
 	return order, score
 
-def findIncreasingRankDiff(graph, start, end):
-	inMinusOut = []
-	for i in range(start, end):
-		incoming = 0
-		outgoing = 0
-		for j in range(start, end):
-			if graph[i][j] != 0:
-				outgoing += 1
-			if graph[j][i] != 0:
-				incoming += 1
-		inMinusOut.append((i, incoming - outgoing))
-	inMinusOut.sort(key=lambda tup: tup[1])
-	return [i[0] for i in inMinusOut]
+def findSourceLike(graph, vertices):
+	deleted = []
+	for x in vertices:
+		incomingAll = []
+		for i in vertices:
+			if i not in deleted:
+				incoming = 0
+				for j in vertices:
+					if graph[j][i] != 0 and j not in deleted:
+						incoming += 1
+				incomingAll.append((i, incoming))
+		delete = min(incomingAll, key=lambda tup: tup[1])[0]
+		deleted.append(delete)
+	return deleted
+
 
 #--------------------------------------------------------------------
 #------------GREEDY WIN-LOSS RATIO-----------------------------------
 #--------------------------------------------------------------------
-def greedyRatio(graph, vertices, edges):
-	order = findIncreasingRankRatio(graph, 0, vertices)
-	score = countForward(graph, vertices, order)
+def greedyRatio(graph, num_vertices, num_edges, vertices):
+	order = findIncreasingRankRatio(graph, vertices)
+	score = countForward(graph, num_vertices, order)
 	return order, score
 
-def findIncreasingRankRatio(graph, start, end):
+def findIncreasingRankRatio(graph, vertices):
 	inMinusOut = []
-	for i in range(start, end):
+	for i in vertices:
 		incoming = 0
 		outgoing = 0
-		for j in range(start, end):
+		for j in vertices:
 			if graph[i][j] != 0:
 				outgoing += 1
 			if graph[j][i] != 0:
@@ -232,36 +250,71 @@ def findIncreasingRankRatio(graph, start, end):
 	inMinusOut.sort(key=lambda tup: tup[1])
 	return [i[0] for i in inMinusOut]
 
+#--------------------------------------------------------------------
+#------------GREEDY WIN-LOSS DIFFERENCE------------------------------
+#--------------------------------------------------------------------
+def greedyDiff(graph, num_vertices, num_edges, vertices):
+	order = findIncreasingRankDiff(graph, vertices)
+	score = countForward(graph, num_vertices, order)
+	return order, score
+
+def findIncreasingRankDiff(graph, vertices):
+	inMinusOut = []
+	for i in vertices:
+		incoming = 0
+		outgoing = 0
+		for j in vertices:
+			if graph[i][j] != 0:
+				outgoing += 1
+			if graph[j][i] != 0:
+				incoming += 1
+		inMinusOut.append((i, incoming - outgoing))
+	inMinusOut.sort(key=lambda tup: tup[1])
+	return [i[0] for i in inMinusOut]
 
 #--------------------------------------------------------------------
 #------------NAIVE 2-APPROXIMATION-----------------------------------
 #--------------------------------------------------------------------
-def naive2approx(graph, vertices, edges):
-	order = generateRandomOrder(0, vertices)
-	forward = countForward(graph, vertices, order)
-	order, forward = flip(order, forward, edges)
+def naive2approx(graph, num_vertices, num_edges, vertices):
+	order = generateRandomOrder(vertices)
+	forward = countForward(graph, num_vertices, order)
+	order, forward = flip(order, forward, num_edges)
 	return order, forward
 
-def generateRandomOrder(start, end):
-	f = range(start, end)
-	random.shuffle(f)
-	return f
+def generateRandomOrder(vertices):
+	random.shuffle(vertices)
+	return vertices
 
-def countForward(graph, vertices, order):
+forwardScores = {}
+
+def countForward(graph, num_vertices, order):
+	score = hasScore(order)
+	if score:
+		return score
+
 	counter = 0
-	for i in range(vertices):
+	for i in range(num_vertices):
 		node1 = order[i]
-		for j in range(i, vertices):
+		for j in range(i, num_vertices):
 			node2 = order[j]
 
 			if graph[node1][node2] != 0:
 				counter += 1
 
+	forwardScores[str(order)] = counter 
+
 	return counter
 
-def flip(order, forward, edges):
-	if forward <= edges / 2:
-		return order[::-1], (edges - forward)
+def hasScore(order):
+    try:
+        x = forwardScores[str(order)]
+        return x
+    except KeyError:
+        return None
+
+def flip(order, forward, num_edges):
+	if forward <= num_edges / 2:
+		return order[::-1], (num_edges - forward)
 	return order, forward
 
 #--------------------------------------------------------------------
@@ -277,19 +330,19 @@ def createOutput(name, orders):
 	fout.close()
 
 def randomizedInput(size, trueRatio):
-	randomArray = [[0 for x in xrange(size)] for y in xrange(size)]
-	edges = 0
+	randomArray = [[0 for x in range(size)] for y in range(size)]
+	num_edges = 0
 	for i in range(size):
 		for j in range(size):
 			if i != j and random.random() < trueRatio:
 				randomArray[i][j] = 1
-				edges += 1
+				num_edges += 1
 			else:
 				randomArray[i][j] = 0
-	return randomArray, edges
+	return randomArray, num_edges
 
 def randomizedInputFile(name, size):
-	randomArray, edges = randomizedInput(size)
+	randomArray, num_edges = randomizedInput(size)
 
 	fout = open(name, 'w')
 	fout.write(str(size)+"\n")
@@ -304,16 +357,16 @@ def processInputMatrix(s):
 	fin = open(s, "r")
 	line = fin.readline().split()
 	N = int(line[0])
-	edges = 0
+	num_edges = 0
 
-	d = [[0 for j in xrange(N)] for i in xrange(N)]
-	for i in xrange(N):
+	d = [[0 for j in range(N)] for i in range(N)]
+	for i in range(N):
 		line = fin.readline().split()
-		for j in xrange(N):
+		for j in range(N):
 			d[i][j] = int(line[j])
 			if d[i][j] != 0:
-				edges += 1
-	return d, N, edges
+				num_edges += 1
+	return d, N, num_edges
 
 if __name__ == '__main__':
 	main(sys.argv[1:])

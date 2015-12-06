@@ -271,7 +271,7 @@ def cc_finder(graph):
 			visited = visited.union(clump)
 			cc_clumps.append(list(clump))
 			
-	return clump
+	return cc_clumps
 	
 	
 def explore(graph, start):
