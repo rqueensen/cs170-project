@@ -124,11 +124,11 @@ def runAllAlgorithms(graph, num_edges, vertices, in_cc, naiveIterations):
     if not in_cc:
         forwardScores = {}
 
-        ccOrder, ccScore = cc_order(graph, naiveIterations)
+        ccOrder, ccScore = cc_order(graph, num_edges, naiveIterations)
         scores.append((7, ccScore))
         orders.append((7, ccOrder))
 
-        sccOrder, sccScore = scc_order(graph, naiveIterations)
+        sccOrder, sccScore = scc_order(graph, num_edges, naiveIterations)
         scores.append((8, sccScore))
         orders.append((8, sccOrder))
 
@@ -351,8 +351,8 @@ def hasScore(order):
 #------------CONNECTED COMPONENTS -----------------------------------
 #--------------------------------------------------------------------
 
-def cc_order(graph, naiveIterations):
-    clumps, num_edges = cc_finder(graph)
+def cc_order(graph, num_edges, naiveIterations):
+    clumps = cc_finder(graph)
     final = []
     for clump in clumps:
         if len(clump) < 9:
@@ -376,12 +376,8 @@ def cc_finder(graph):
             clump = explore(graph, node)
             visited = visited.union(clump)
             cc_clumps.append(list(clump))
-            for x in xrange(len(graph)):
-                if graph[node][x] != 0:
-                    num_edges += 1
             
-    return cc_clumps, num_edges
-    
+    return cc_clumps
     
 def explore(graph, start):
     #Finds the set of nodes reachable from start by going any direction
@@ -399,20 +395,21 @@ def explore(graph, start):
     return visited
     
 #--------------------------------------------------------------------
-#------------SCC----------------------------------------
+#------------SCC-----------------------------------------------------
 #--------------------------------------------------------------------
-def scc_order(graph, naiveIterations):
-    clumps, num_edges = scc_finder(graph)
+def scc_order(graph, num_edges, naiveIterations):
+    clumps = scc_finder(graph)
     final = []
+
     for clump in clumps:
         if len(clump) < 9:
-            final += bruteForce(graph, clump)[1]
+            final = bruteForce(graph, clump)[1] + final
         else:
             scores, curOrders = runAllAlgorithms(graph, num_edges, clump, True, naiveIterations)
             best = max(scores, key=lambda x:x[1])[0]
             bestOrder = curOrders[best][1]
-            final += bestOrder
-            
+            final = bestOrder + final
+    
     return final, countForward(graph, final)
 
 def scc_finder(graph):
@@ -430,13 +427,10 @@ def scc_finder(graph):
             clump = explore(graph, node)
             visited = visited.union(clump)
             cc_clumps.append(list(clump))
-            for x in xrange(len(graph)):
-                if graph[node][x] != 0:
-                    num_edges += 1
             
     adjacencymatrix = adjmat(graph)
     initialList = tarjan(adjacencymatrix)
-    return initialList, num_edges
+    return initialList
 
 def adjmat(graph):
     #changes graph's format to be a dictionary in the form {1:[2],2:[1,5],3:[4],4:[3,5],5:[6],6:[7],7:[8],8:[6,9],9:[]}
@@ -455,7 +449,11 @@ def adjmat(graph):
 #--------------------------------------------------------------------
 def bruteForce(graph, vertices):
     permutations = []
-    for i in itertools.permutations(vertices):
+
+    if len(vertices) == 1:
+        return 0, vertices
+
+    for i in itertools.permutations(vertices, len(vertices)):
         permutations.append(list(i))
         
     best_score = 0
@@ -465,7 +463,7 @@ def bruteForce(graph, vertices):
         if rand_score > best_score:
             best_score = rand_score
             best_order = perm
-            
+
     return best_score, best_order
     
 #--------------------------------------------------------------------

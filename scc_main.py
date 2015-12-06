@@ -161,7 +161,7 @@ def findSCC(graph, vertices, edges):
 
     adjacencymatrix = adjmat(graph)
     initialList = tarjan(adjacencymatrix)
-    return topoSortSCC(initialList, vertices, edges)
+    return topoSortSCC(graph, initialList, vertices, edges)
 
 def adjmat(graph):
     #changes graph's format to be a dictionary in the form {1:[2],2:[1,5],3:[4],4:[3,5],5:[6],6:[7],7:[8],8:[6,9],9:[]}
@@ -175,14 +175,13 @@ def adjmat(graph):
                 dictionary[x].append(y)
     return dictionary
 
-def topoSortSCC(sccList, vertices, edges):
+def topoSortSCC(graph, sccList, vertices, edges):
     #runs algorithms on topologically sorted list of SCC's
     retval = []
     while sccList:
         indivSCC = sccList.pop(0)
-        indivSCC = listToGraph(indivSCC)
         retOrder = runAllSCC(indivSCC, vertices, edges)
-    retval.extend(retOrder)
+        retval.extend(retOrder)
     return retval
 
 def runAllSCC(graph, vertices, edges):
