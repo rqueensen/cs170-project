@@ -152,7 +152,7 @@ def findLocalMax(graph, num_vertices, vertices, order, forward):
 	maxOrder = copy.copy(order)
 
 	for i in vertices:
-		j = random.randint(0, num_vertices - 1)
+		j = random.randint(0, len(vertices) - 1)
 		curOrder = copy.copy(order)
 		curOrder[i], curOrder[j] = curOrder[j], curOrder[i]
 		curForward = countForward(graph, curOrder)
