@@ -173,12 +173,14 @@ def adjmat(graph):
         for y in range(width):
             if graph[x][y] == 1:
                 dictionary[x].append(y)
+    return dictionary
 
 def topoSortSCC(sccList, vertices, edges):
     #runs algorithms on topologically sorted list of SCC's
     retval = []
     while sccList:
         indivSCC = sccList.pop(0)
+        indivSCC = listToGraph(indivSCC)
         retOrder = runAllSCC(indivSCC, vertices, edges)
     retval.extend(retOrder)
     return retval
