@@ -1,5 +1,7 @@
-ParanoidSheep
-24518202
-25079710
-23831289
-25346876
+CS170 Final Project
+
+The goal of this problem was to optimize an NP-HARD problem of deciding 
+who would win in a bracket tournament given that A beats B, B beats C, E beats A, etc. 
+
+This was accomplished by trying many different algorithms (brute force for small tournaments, 
+gradient descent for larger tournaments, etc.) These can be found in main.py.
